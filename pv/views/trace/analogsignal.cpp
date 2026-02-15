@@ -492,7 +492,6 @@ void AnalogSignal::paint_envelope(QPainter &p,
 {
 	using pv::data::AnalogSegment;
 
-	// Note: Envelope painting currently doesn't generate a pixel<->value lookup table
 	if (show_hover_marker_)
 		reset_pixel_values();
 
@@ -509,10 +508,14 @@ void AnalogSignal::paint_envelope(QPainter &p,
 	QRectF *rect = rects;
 
 	for (uint64_t sample = 0; sample < e.length - 1; sample++) {
-		const float x = ((e.scale * sample + e.start) /
-			samples_per_pixel - pixels_offset) + left;
+		const float abs_x = (e.scale * sample + e.start) /
+			samples_per_pixel - pixels_offset;
+		const float x = abs_x + left;
 
 		const AnalogSegment::EnvelopeSample *const s = e.samples + sample;
+
+		if (show_hover_marker_)
+			process_next_sample_value(abs_x, (s->min + s->max) / 2);
 
 		// We overlap this sample with the next so that vertical
 		// gaps do not appear during steep rising or falling edges
